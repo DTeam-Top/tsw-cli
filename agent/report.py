@@ -166,9 +166,10 @@ def _output_report(topic, format, content):
 def _send_report(topic: str, receivers: List[str], content: str):
     html = markdown.markdown(content)
     resend.api_key = os.getenv("RESEND_API_KEY")
+    email_from = os.getenv("EMAIL_FROM")
     resend.Emails.send(
         {
-            "from": "TSW <onboarding@resend.dev>",
+            "from": email_from,
             "to": receivers,
             "subject": topic,
             "html": html,
