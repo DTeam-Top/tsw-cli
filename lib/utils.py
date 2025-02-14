@@ -69,14 +69,12 @@ def send_mail(topic: str, receivers: List[str], content: str):
     html = markdown.markdown(content)
     resend.api_key = os.getenv("RESEND_API_KEY")
     email_from = os.getenv("EMAIL_FROM")
-    resend.Emails.send(
-        {
-            "from": email_from,
-            "to": receivers,
-            "subject": topic,
-            "html": html,
-        }
-    )
+    resend.Emails.send({
+        "from": email_from,
+        "to": receivers,
+        "subject": topic,
+        "html": html,
+    })
 
 
 def search_topic(topic: str, num_results=10) -> List[str]:
@@ -92,10 +90,20 @@ def search_topic(topic: str, num_results=10) -> List[str]:
 def fetch_content_as_md(url: str) -> str | None:
     try:
         r = requests.get(url)
-        if "text/html" not in r.headers.get("content-type"):
+        content_type: str = (
+            r.headers["content-type"].lower() if "content-type" in r.headers else ""
+        )
+        content = ""
+        if "text/html" in content_type:
+            content = r.text
+        elif "application/pdf" in content_type:
+            download(url, filename(url))
+            content = extract_text_from_pdf(f"{output_dir}/{filename(url)}")
+        else:
+            print(f"Unsupported content type: {content_type} for url: {url}")
             return None
 
-        return md(r.text)
+        return md(content)
     except Exception:
         print(f"Failed to fetch content from {url}")
 
